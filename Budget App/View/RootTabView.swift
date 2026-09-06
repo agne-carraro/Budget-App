@@ -1,26 +1,37 @@
 import SwiftUI
 
 struct RootTabView: View {
-    @StateObject private var viewModel: LogListViewModel
+    @StateObject private var logListViewModel: LogListViewModel
+	@StateObject private var settingsViewModel: SettingsViewModel
 
-    init(store: LogStoreService) {
-        _viewModel = StateObject(wrappedValue: LogListViewModel(store: store))
+	init(logStore: LogStoreService, settingsStore: SettingsStoreService) {
+        _logListViewModel = StateObject(wrappedValue: LogListViewModel(store: logStore))
+		_settingsViewModel = StateObject(wrappedValue: SettingsViewModel(store: settingsStore))
     }
+	
+	private var colorScheme: ColorScheme? {
+		switch settingsViewModel.appearanceMode {
+		case .light: return .light
+		case .dark: return .dark
+		case .system: return nil
+		}
+	}
 
     var body: some View {
         TabView {
-            HomeView(viewModel: viewModel)
+            HomeView(logListViewModel: logListViewModel, settingsViewModel: settingsViewModel)
                 .tabItem { Label("Home", systemImage: "house.fill") }
 
-            LogListView(viewModel: viewModel)
+            LogListView(logListViewModel: logListViewModel)
                 .tabItem { Label("Logs", systemImage: "list.bullet") }
 
-            SettingsView()
+            SettingsView(logListViewModel: logListViewModel, settingsViewModel: settingsViewModel)
                 .tabItem { Label("Settings", systemImage: "gear") }
         }
+		.preferredColorScheme(colorScheme)
     }
 }
 
 #Preview {
-	RootTabView(store: LogStoreService())
+	RootTabView(logStore: LogStoreService(), settingsStore: SettingsStoreService())
 }

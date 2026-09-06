@@ -5,15 +5,17 @@ enum LogType: String, Codable {
     case food 
     case entertainment
     case other
+}
 
-    var icon: String {
-        switch self {
-        case .gift: return "gift.fill"
-        case .salary: return "dollarsign.circle.fill"
-        case .transportation: return "car.fill"
-        case .food: return "fork.knife"
-        case .entertainment: return "film.fill"
-        case .other: return "questionmark.circle.fill"
-        }
-    }
+extension LogType {
+	var icon: String {
+		switch self {
+		case .gift: return "gift.fill"
+		case .salary: return "dollarsign.circle.fill"
+		case .transportation: return "car.fill"
+		case .food: return "fork.knife"
+		case .entertainment: return "film.fill"
+		case .other: return "questionmark.circle.fill"
+		}
+	}
 }
