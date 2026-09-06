@@ -1,13 +1,9 @@
 import SwiftUI
 
 struct LogListView: View {
-    @StateObject private var viewModel: LogListViewModel
+    @ObservedObject var viewModel: LogListViewModel
     @State private var isShowingAddLog = false
 	@State private var logToEdit: Log?
-
-    init(store: LogStoreService) {
-        _viewModel = StateObject(wrappedValue: LogListViewModel(store: store))
-    }
 
     var body: some View {
         NavigationStack {
@@ -44,5 +40,5 @@ struct LogListView: View {
 }
 
 #Preview {
-    LogListView(store: LogStoreService())
+    LogListView(viewModel: LogListViewModel(store: LogStoreService()))
 }
