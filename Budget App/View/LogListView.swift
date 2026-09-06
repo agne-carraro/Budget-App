@@ -3,6 +3,7 @@ import SwiftUI
 struct LogListView: View {
     @StateObject private var viewModel: LogListViewModel
     @State private var isShowingAddLog = false
+	@State private var logToEdit: Log?
 
     init(store: LogStoreService) {
         _viewModel = StateObject(wrappedValue: LogListViewModel(store: store))
@@ -10,12 +11,16 @@ struct LogListView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                ForEach(viewModel.logs) { log in
-                    LogView(log: log)
-                }
-                .onDelete(perform: viewModel.deleteLog)
-            }
+			List {
+				ForEach(viewModel.logs) { log in
+					LogView(log: log)
+						.contentShape(Rectangle())
+						.onTapGesture {
+							logToEdit = log
+						}
+				}
+				.onDelete(perform: viewModel.deleteLog)
+			}
             .navigationTitle("Logs")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -29,6 +34,9 @@ struct LogListView: View {
             .sheet(isPresented: $isShowingAddLog) {
                 AddLogView(viewModel: viewModel)
             }
+			.sheet(item: $logToEdit) { log in
+				AddLogView(viewModel: viewModel, logToEdit: log)
+			}
         }
 
     }

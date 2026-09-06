@@ -6,12 +6,16 @@ struct LogView: View {
 	var body: some View {
 		HStack {
 			Image(systemName: log.type.icon)
-			.padding()
+
 			VStack(alignment: .leading) {
 				HStack {
 					Text(log.date, style: .date)
+					Spacer()
 				}
-				Text(log.note)
+				if !log.note.isEmpty {
+					Text(log.note)
+						.foregroundColor(.secondary)
+				}
 			}
 			Spacer()
 			Text(
@@ -22,7 +26,6 @@ struct LogView: View {
 			.foregroundColor(log.isIncome ? .green : .red)
 			.font(.headline)
 		}
-		.padding(.horizontal)
 	}
 }
 
