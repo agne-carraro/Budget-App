@@ -1,6 +1,12 @@
 import Foundation
 
-class LogStoreService {
+protocol LogStoring {
+	func load() -> [Log]
+	func save(logs: [Log])
+}
+
+
+class LogStoreService: LogStoring {
     private let saveKey = "logs"
 
     func load() -> [Log] {

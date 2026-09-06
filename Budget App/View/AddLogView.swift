@@ -30,11 +30,11 @@ struct AddLogView: View {
 
                 DatePicker("Date", selection: $date, displayedComponents: .date)
 
-                Picker("Category", selection: $type) {
-                    ForEach([LogType.gift, .salary, .transportation, .food, .entertainment, .other], id: \.self) { type in
-                        Text(type.rawValue.capitalized).tag(type)
-                    }
-                }
+				Picker("Category", selection: $type) {
+					ForEach(LogType.allCases, id: \.self) { type in
+						Text(type.rawValue.capitalized).tag(type)
+					}
+				}
 
                 Picker("Type", selection: $isIncome) {
                     Text("Expense").tag(false)

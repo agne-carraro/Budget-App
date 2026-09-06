@@ -4,9 +4,9 @@ import Foundation
 class LogListViewModel: ObservableObject {
     @Published private(set) var logs: [Log] = []
 
-    private let store: LogStoreService
+    private let store: LogStoring
 
-    init(store: LogStoreService) {
+    init(store: LogStoring) {
         self.store = store
         self.logs = store.load()
     }
