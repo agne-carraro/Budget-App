@@ -1,4 +1,4 @@
-enum LogType: String, Codable {
+enum LogType: String, Codable, CaseIterable {
     case gift
     case salary
     case transportation

@@ -3,10 +3,12 @@ import SwiftUI
 struct RootTabView: View {
     @StateObject private var logListViewModel: LogListViewModel
 	@StateObject private var settingsViewModel: SettingsViewModel
+	@StateObject private var budgetListViewModel: BudgetListViewModel
 
-	init(logStore: LogStoreService, settingsStore: SettingsStoreService) {
+	init(logStore: LogStoreService, settingsStore: SettingsStoreService, budgetStore: BudgetStoreService) {
         _logListViewModel = StateObject(wrappedValue: LogListViewModel(store: logStore))
 		_settingsViewModel = StateObject(wrappedValue: SettingsViewModel(store: settingsStore))
+		_budgetListViewModel = StateObject(wrappedValue: BudgetListViewModel(store: budgetStore))
     }
 	
 	private var colorScheme: ColorScheme? {
@@ -24,6 +26,9 @@ struct RootTabView: View {
 
             LogListView(logListViewModel: logListViewModel)
                 .tabItem { Label("Logs", systemImage: "list.bullet") }
+			
+			BudgetListView(budgetListViewModel: budgetListViewModel, logListViewModel: logListViewModel)
+				.tabItem { Label("Budgets", systemImage: "chart.pie.fill") }
 
             SettingsView(logListViewModel: logListViewModel, settingsViewModel: settingsViewModel)
                 .tabItem { Label("Settings", systemImage: "gear") }
@@ -33,5 +38,5 @@ struct RootTabView: View {
 }
 
 #Preview {
-	RootTabView(logStore: LogStoreService(), settingsStore: SettingsStoreService())
+	RootTabView(logStore: LogStoreService(), settingsStore: SettingsStoreService(), budgetStore: BudgetStoreService())
 }
