@@ -1,21 +1,21 @@
 import SwiftUI
 
 struct LogListView: View {
-    @ObservedObject var viewModel: LogListViewModel
+    @ObservedObject var logListViewModel: LogListViewModel
     @State private var isShowingAddLog = false
 	@State private var logToEdit: Log?
 
     var body: some View {
         NavigationStack {
 			List {
-				ForEach(viewModel.logs) { log in
+				ForEach(logListViewModel.logs) { log in
 					LogView(log: log)
 						.contentShape(Rectangle())
 						.onTapGesture {
 							logToEdit = log
 						}
 				}
-				.onDelete(perform: viewModel.deleteLog)
+				.onDelete(perform: logListViewModel.deleteLog)
 			}
             .navigationTitle("Logs")
             .toolbar {
@@ -28,10 +28,10 @@ struct LogListView: View {
                 }
             }
             .sheet(isPresented: $isShowingAddLog) {
-                AddLogView(viewModel: viewModel)
+                AddLogView(viewModel: logListViewModel)
             }
 			.sheet(item: $logToEdit) { log in
-				AddLogView(viewModel: viewModel, logToEdit: log)
+				AddLogView(viewModel: logListViewModel, logToEdit: log)
 			}
         }
 
@@ -40,5 +40,5 @@ struct LogListView: View {
 }
 
 #Preview {
-    LogListView(viewModel: LogListViewModel(store: LogStoreService()))
+    LogListView(logListViewModel: LogListViewModel(store: LogStoreService()))
 }

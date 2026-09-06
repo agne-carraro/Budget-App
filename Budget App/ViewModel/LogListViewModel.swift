@@ -23,10 +23,6 @@ class LogListViewModel: ObservableObject {
         }
         store.save(logs: logs)
     }
-
-    func exportLogs() -> URL? {
-        exportToCSV(logs: logs)
-    }
 	
 	func updateLog(id: UUID, amount: Double, date: Date, type: LogType, note: String, isIncome: Bool) {
 		guard let index = logs.firstIndex(where: { $0.id == id }) else { return }

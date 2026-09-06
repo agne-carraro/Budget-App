@@ -1,13 +1,15 @@
 import SwiftUI
 
 struct HomeView: View {
-    @ObservedObject var viewModel: LogListViewModel
+    @ObservedObject var logListViewModel: LogListViewModel
+	@ObservedObject var settingsViewModel: SettingsViewModel
 
-    private var total: Double {
-        viewModel.logs.reduce(0) { partial, log in
-            partial + (log.isIncome ? log.amount : -log.amount)
-        }
-    }
+	private var total: Double {
+		let logsTotal = logListViewModel.logs.reduce(0) { partial, log in
+			partial + (log.isIncome ? log.amount : -log.amount)
+		}
+		return settingsViewModel.startingBalance + logsTotal
+	}
 
 	var body: some View {
 		NavigationStack {
@@ -26,7 +28,7 @@ struct HomeView: View {
 				.cornerRadius(16)
 				.shadow(radius: 0.2)
 
-				if let last = viewModel.logs.last {
+				if let last = logListViewModel.logs.last {
 					VStack(alignment: .leading) {
 						Text("Last log")
 							.font(.headline)
@@ -50,5 +52,5 @@ struct HomeView: View {
 }
 
 #Preview {
-	HomeView(viewModel: LogListViewModel(store: LogStoreService()))
+	HomeView(logListViewModel: LogListViewModel(store: LogStoreService()), settingsViewModel: SettingsViewModel(store: SettingsStoreService()))
 }
