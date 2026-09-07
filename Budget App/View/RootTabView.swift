@@ -30,7 +30,7 @@ struct RootTabView: View {
 			BudgetListView(budgetListViewModel: budgetListViewModel, logListViewModel: logListViewModel)
 				.tabItem { Label("Budgets", systemImage: "chart.pie.fill") }
 
-            SettingsView(logListViewModel: logListViewModel, settingsViewModel: settingsViewModel)
+            SettingsView(logListViewModel: logListViewModel, budgetListViewModel: budgetListViewModel, settingsViewModel: settingsViewModel)
                 .tabItem { Label("Settings", systemImage: "gear") }
         }
 		.preferredColorScheme(colorScheme)

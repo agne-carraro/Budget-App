@@ -3,6 +3,7 @@ import SwiftUI
 struct BudgetView: View {
 	let budget: Budget
 	let spent: Double
+	let effectiveLimit: Double
 	let progress: Double
 
 	var body: some View {
@@ -14,7 +15,7 @@ struct BudgetView: View {
 
 				Spacer()
 
-				Text("\(spent, specifier: "%.2f") / \(budget.monthlyLimit, specifier: "%.2f")")
+				Text("\(max(spent, 0), specifier: "%.2f") / \(effectiveLimit, specifier: "%.2f")")
 					.font(.subheadline)
 					.foregroundColor(.secondary)
 			}
@@ -27,5 +28,5 @@ struct BudgetView: View {
 }
 
 #Preview {
-	BudgetView(budget: Budget(type: .food, monthlyLimit: 300), spent: 400, progress: 1.2)
+	BudgetView(budget: Budget(type: .food, monthlyLimit: 300), spent: 400, effectiveLimit: 300, progress: 1.2)
 }

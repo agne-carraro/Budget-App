@@ -13,6 +13,7 @@ struct BudgetListView: View {
 					BudgetView(
 						budget: budget,
 						spent: budgetListViewModel.spent(for: budget, logs: logListViewModel.logs),
+						effectiveLimit: budgetListViewModel.effectiveLimit(for: budget, logs: logListViewModel.logs),
 						progress: budgetListViewModel.progress(for: budget, logs: logListViewModel.logs)
 					)
 					.contentShape(Rectangle())

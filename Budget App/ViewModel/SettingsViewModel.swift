@@ -23,7 +23,7 @@ class SettingsViewModel: ObservableObject {
 		store.saveStartingBalance(value)
 	}
 
-	func exportLogs(_ logs: [Log]) -> URL? {
-		exportToCSV(logs: logs)
+	func exportAllData(_ logs: [Log], _ budgets: [Budget]) -> URL? {
+		exportFullData(logs: logs, budgets: budgets, startingBalance: startingBalance)
 	}
 }
