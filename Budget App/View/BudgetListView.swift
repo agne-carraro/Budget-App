@@ -4,25 +4,48 @@ struct BudgetListView: View {
 	@ObservedObject var budgetListViewModel: BudgetListViewModel
 	@ObservedObject var logListViewModel: LogListViewModel
 	@State private var isShowingAddBudget = false
-	@State private var budgetToEdit: Budget?
+	@State private var targetToEdit: BudgetTarget?
+	@Binding var selectedMonth: SelectedMonth
 
 	var body: some View {
 		NavigationStack {
-			List {
-				ForEach(budgetListViewModel.budgets) { budget in
-					BudgetView(
-						budget: budget,
-						spent: budgetListViewModel.spent(for: budget, logs: logListViewModel.logs),
-						effectiveLimit: budgetListViewModel.effectiveLimit(for: budget, logs: logListViewModel.logs),
-						progress: budgetListViewModel.progress(for: budget, logs: logListViewModel.logs)
-					)
-					.contentShape(Rectangle())
-					.onTapGesture {
-						budgetToEdit = budget
+			VStack(spacing: 0) {
+				MonthSelectorView(selectedMonth: $selectedMonth)
+					.padding()
+
+				List {
+					ForEach(budgetListViewModel.trackedTargets(for: selectedMonth), id: \.self) {
+						target in
+						BudgetView(
+							target: target,
+							spent: budgetListViewModel.spent(
+								for: target, logs: logListViewModel.logs, month: selectedMonth),
+							limit: budgetListViewModel.limit(
+								for: target, logs: logListViewModel.logs, month: selectedMonth),
+							progress: budgetListViewModel.progress(
+								for: target, logs: logListViewModel.logs, month: selectedMonth)
+						)
+						.contentShape(Rectangle())
+						.onTapGesture {
+							targetToEdit = target
+						}
+					}
+					.onDelete { offsets in
+						let targets = budgetListViewModel.trackedTargets(for: selectedMonth)
+						for index in offsets {
+							switch targets[index] {
+							case .total:
+								budgetListViewModel.deleteOverallBudget(month: selectedMonth)
+							case .category(let type):
+								budgetListViewModel.deleteBudget(type: type, month: selectedMonth)
+							}
+						}
 					}
 				}
-				.onDelete(perform: budgetListViewModel.deleteBudget)
+				.listStyle(.insetGrouped)
+				.scrollContentBackground(.hidden)
 			}
+			.background(Color(.systemGroupedBackground))
 			.navigationTitle("Budgets")
 			.toolbar {
 				ToolbarItem(placement: .navigationBarTrailing) {
@@ -31,20 +54,31 @@ struct BudgetListView: View {
 					} label: {
 						Image(systemName: "plus")
 					}
-					.disabled(!budgetListViewModel.hasAvailableCategories)
 				}
 			}
 			.sheet(isPresented: $isShowingAddBudget) {
-				AddBudgetView(budgetListViewModel: budgetListViewModel)
+				AddBudgetView(
+					budgetListViewModel: budgetListViewModel, selectedMonth: selectedMonth)
 			}
-			.sheet(item: $budgetToEdit) { budget in
-				AddBudgetView(budgetListViewModel: budgetListViewModel, budgetToEdit: budget)
+			.sheet(
+				item: Binding(
+					get: { targetToEdit.map { IdentifiableTarget(target: $0) } },
+					set: { targetToEdit = $0?.target }
+				)
+			) { wrapped in
+				AddBudgetView(
+					budgetListViewModel: budgetListViewModel, selectedMonth: selectedMonth,
+					targetToEdit: wrapped.target)
 			}
 		}
-
 	}
 }
 
 #Preview {
-	BudgetListView(budgetListViewModel: BudgetListViewModel(store: BudgetStoreService()), logListViewModel: LogListViewModel(store: LogStoreService()))
+	BudgetListView(
+		budgetListViewModel: BudgetListViewModel(
+			store: BudgetStoreService(), overallStore: OverallBudgetStoreService()),
+		logListViewModel: LogListViewModel(store: LogStoreService()),
+		selectedMonth: .constant(.current)
+	)
 }

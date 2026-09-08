@@ -1,29 +1,14 @@
 import SwiftUI
 
-struct BudgetView: View {
-    let target: BudgetTarget
+struct OverallBudgetView: View {
     let spent: Double
     let limit: Double
     let progress: Double
 
-    private var icon: String {
-        switch target {
-        case .total: return "sum"
-        case .category(let type): return type.icon
-        }
-    }
-
-    private var title: String {
-        switch target {
-        case .total: return "Total"
-        case .category(let type): return type.rawValue.capitalized
-        }
-    }
-
     private var progressColor: Color {
         switch progress {
         case ..<0.7: return .green
-        case 0.7..<0.86: return .orange
+        case 0.7..<0.9: return .orange
         default: return .red
         }
     }
@@ -31,17 +16,13 @@ struct BudgetView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Image(systemName: icon)
-                Text(title)
+                Text("Overall")
                     .font(.headline)
-
                 Spacer()
-
                 Text("\(max(spent, 0), specifier: "%.2f") / \(limit, specifier: "%.2f")")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
-
             ProgressView(value: progress)
                 .tint(progressColor)
         }
@@ -49,8 +30,4 @@ struct BudgetView: View {
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(16)
     }
-}
-
-#Preview {
-    BudgetView(target: .category(.food), spent: 200, limit: 300, progress: 0.7)
 }
