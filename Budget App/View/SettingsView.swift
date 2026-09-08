@@ -63,6 +63,6 @@ struct SettingsView: View {
 #Preview {
 	SettingsView(
 		logListViewModel: LogListViewModel(store: LogStoreService()),
-		budgetListViewModel: BudgetListViewModel(store: BudgetStoreService()),
+		budgetListViewModel: BudgetListViewModel(store: BudgetStoreService(), overallStore: OverallBudgetStoreService()),
 		settingsViewModel: SettingsViewModel(store: SettingsStoreService()))
 }

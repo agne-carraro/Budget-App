@@ -5,42 +5,51 @@ struct AddBudgetView: View {
     @Environment(\.dismiss) private var dismiss
 
     let selectedMonth: SelectedMonth
-    let categoryToEdit: LogType?
+    let targetToEdit: BudgetTarget?
 
-    @State private var type: LogType = .other
+    @State private var target: BudgetTarget = .total
     @State private var monthlyLimit: Double = 0
 
-    init(budgetListViewModel: BudgetListViewModel, selectedMonth: SelectedMonth, categoryToEdit: LogType? = nil) {
+    init(budgetListViewModel: BudgetListViewModel, selectedMonth: SelectedMonth, targetToEdit: BudgetTarget? = nil) {
         self.budgetListViewModel = budgetListViewModel
         self.selectedMonth = selectedMonth
-        self.categoryToEdit = categoryToEdit
+        self.targetToEdit = targetToEdit
 
-        let existingBudget = categoryToEdit.flatMap {
-            budgetListViewModel.budget(for: $0, month: selectedMonth)
+        let existingLimit: Double
+        switch targetToEdit {
+        case .total:
+            existingLimit = budgetListViewModel.overallBudget(for: selectedMonth)?.monthlyLimit ?? 0
+        case .category(let type):
+            existingLimit = budgetListViewModel.budget(for: type, month: selectedMonth)?.monthlyLimit ?? 0
+        case nil:
+            existingLimit = 0
         }
-        _type = State(initialValue: categoryToEdit ?? .other)
-        _monthlyLimit = State(initialValue: existingBudget?.monthlyLimit ?? 0)
+
+        _target = State(initialValue: targetToEdit ?? .total)
+        _monthlyLimit = State(initialValue: existingLimit)
     }
 
-    private var availableTypes: [LogType] {
-        let trackedTypes = Set(budgetListViewModel.trackedCategories(for: selectedMonth))
-        return LogType.allCases.filter { !trackedTypes.contains($0) }
+    private var targetLabel: String {
+        switch target {
+        case .total: return "Total"
+        case .category(let type): return type.rawValue.capitalized
+        }
     }
 
     var body: some View {
         NavigationStack {
             Form {
-                if categoryToEdit == nil {
-                    Picker("Category", selection: $type) {
-                        ForEach(availableTypes, id: \.self) { type in
-                            Text(type.rawValue.capitalized).tag(type)
+                if targetToEdit == nil {
+                    Picker("Category", selection: $target) {
+                        ForEach(budgetListViewModel.availableTargets(for: selectedMonth), id: \.self) { target in
+                            Text(label(for: target)).tag(target)
                         }
                     }
                 } else {
                     HStack {
                         Text("Category")
                         Spacer()
-                        Text(type.rawValue.capitalized)
+                        Text(targetLabel)
                             .foregroundColor(.secondary)
                     }
                 }
@@ -48,24 +57,34 @@ struct AddBudgetView: View {
                 TextField("Monthly limit", value: $monthlyLimit, format: .number)
                     .keyboardType(.decimalPad)
             }
-            .navigationTitle(categoryToEdit == nil ? "Add Budget" : "Edit Budget")
+            .navigationTitle(targetToEdit == nil ? "Add Budget" : "Edit Budget")
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(categoryToEdit == nil ? "Add" : "Save") {
-                        budgetListViewModel.setBudget(type: type, monthlyLimit: monthlyLimit, month: selectedMonth)
+                    Button(targetToEdit == nil ? "Add" : "Save") {
+                        switch target {
+                        case .total:
+                            budgetListViewModel.setOverallBudget(monthlyLimit: monthlyLimit, month: selectedMonth)
+                        case .category(let type):
+                            budgetListViewModel.setBudget(type: type, monthlyLimit: monthlyLimit, month: selectedMonth)
+                        }
                         dismiss()
                     }
                 }
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
+                    Button("Cancel") { dismiss() }
                 }
             }
+        }
+    }
+
+    private func label(for target: BudgetTarget) -> String {
+        switch target {
+        case .total: return "Total"
+        case .category(let type): return type.rawValue.capitalized
         }
     }
 }
 
 #Preview {
-    AddBudgetView(budgetListViewModel: BudgetListViewModel(store: BudgetStoreService()), selectedMonth: .current)
+	AddBudgetView(budgetListViewModel: BudgetListViewModel(store: BudgetStoreService(), overallStore: OverallBudgetStoreService()), selectedMonth: .current, targetToEdit: .total)
 }

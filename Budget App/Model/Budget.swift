@@ -15,3 +15,8 @@ struct Budget: Identifiable, Codable {
         self.month = month
     }
 }
+
+enum BudgetTarget: Hashable {
+    case category(LogType)
+    case total
+}

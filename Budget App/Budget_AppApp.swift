@@ -5,7 +5,7 @@ struct Budget_AppApp: App {
 
     var body: some Scene {
         WindowGroup {
-			RootTabView(logStore: LogStoreService(), settingsStore: SettingsStoreService(), budgetStore: BudgetStoreService())
+			RootTabView(logStore: LogStoreService(), settingsStore: SettingsStoreService(), budgetStore: BudgetStoreService(), overallStore: OverallBudgetStoreService())
         }
     }
 }

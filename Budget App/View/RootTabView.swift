@@ -6,10 +6,10 @@ struct RootTabView: View {
 	@StateObject private var budgetListViewModel: BudgetListViewModel
 	@State private var selectedMonth: SelectedMonth = .current
 
-	init(logStore: LogStoreService, settingsStore: SettingsStoreService, budgetStore: BudgetStoreService) {
+	init(logStore: LogStoreService, settingsStore: SettingsStoreService, budgetStore: BudgetStoreService, overallStore: OverallBudgetStoreService) {
         _logListViewModel = StateObject(wrappedValue: LogListViewModel(store: logStore))
 		_settingsViewModel = StateObject(wrappedValue: SettingsViewModel(store: settingsStore))
-		_budgetListViewModel = StateObject(wrappedValue: BudgetListViewModel(store: budgetStore))
+		_budgetListViewModel = StateObject(wrappedValue: BudgetListViewModel(store: budgetStore, overallStore: overallStore))
     }
 	
 	private var colorScheme: ColorScheme? {
@@ -39,5 +39,5 @@ struct RootTabView: View {
 }
 
 #Preview {
-	RootTabView(logStore: LogStoreService(), settingsStore: SettingsStoreService(), budgetStore: BudgetStoreService())
+	RootTabView(logStore: LogStoreService(), settingsStore: SettingsStoreService(), budgetStore: BudgetStoreService(), overallStore: OverallBudgetStoreService())
 }
