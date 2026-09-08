@@ -6,7 +6,7 @@ struct SettingsView: View {
 	@ObservedObject var settingsViewModel: SettingsViewModel
 	@FocusState private var isAmountFocused: Bool
 
-	@State private var balanceInput: String = ""
+	@State private var balanceInput: Double = 0
 	@State private var exportURL: URL?
 
 	var body: some View {
@@ -28,16 +28,14 @@ struct SettingsView: View {
 				}
 
 				Section("Starting Balance") {
-					TextField("Starting balance", text: $balanceInput)
+					TextField("Starting balance", value: $balanceInput, format: .number)
 						.keyboardType(.decimalPad)
 						.focused($isAmountFocused)
 						.toolbar {
 							ToolbarItemGroup(placement: .keyboard) {
 								Spacer()
 								Button("Done") {
-									if let value = Double(balanceInput) {
-										settingsViewModel.updateStartingBalance(value)
-									}
+									settingsViewModel.updateStartingBalance(balanceInput)
 									isAmountFocused = false
 								}
 							}
@@ -45,7 +43,9 @@ struct SettingsView: View {
 				}
 
 				Section("Data") {
-					if let exportURL = settingsViewModel.exportAllData(logListViewModel.logs, budgetListViewModel.budgets) {
+					if let exportURL = settingsViewModel.exportAllData(
+						logListViewModel.logs, budgetListViewModel.budgets)
+					{
 						ShareLink("Export All Data", item: exportURL)
 					} else {
 						Text("Nothing to export yet")
@@ -54,7 +54,7 @@ struct SettingsView: View {
 			}
 			.navigationTitle("Settings")
 			.onAppear {
-				balanceInput = String(settingsViewModel.startingBalance)
+				balanceInput = settingsViewModel.startingBalance
 			}
 		}
 	}

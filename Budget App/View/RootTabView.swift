@@ -4,6 +4,7 @@ struct RootTabView: View {
     @StateObject private var logListViewModel: LogListViewModel
 	@StateObject private var settingsViewModel: SettingsViewModel
 	@StateObject private var budgetListViewModel: BudgetListViewModel
+	@State private var selectedMonth: SelectedMonth = .current
 
 	init(logStore: LogStoreService, settingsStore: SettingsStoreService, budgetStore: BudgetStoreService) {
         _logListViewModel = StateObject(wrappedValue: LogListViewModel(store: logStore))
@@ -24,10 +25,10 @@ struct RootTabView: View {
             HomeView(logListViewModel: logListViewModel, settingsViewModel: settingsViewModel)
                 .tabItem { Label("Home", systemImage: "house.fill") }
 
-            LogListView(logListViewModel: logListViewModel)
+            LogListView(logListViewModel: logListViewModel, selectedMonth: $selectedMonth)
                 .tabItem { Label("Logs", systemImage: "list.bullet") }
 			
-			BudgetListView(budgetListViewModel: budgetListViewModel, logListViewModel: logListViewModel)
+			BudgetListView(budgetListViewModel: budgetListViewModel, logListViewModel: logListViewModel, selectedMonth: $selectedMonth)
 				.tabItem { Label("Budgets", systemImage: "chart.pie.fill") }
 
             SettingsView(logListViewModel: logListViewModel, budgetListViewModel: budgetListViewModel, settingsViewModel: settingsViewModel)

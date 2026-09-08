@@ -1,80 +1,71 @@
 import SwiftUI
 
 struct AddBudgetView: View {
-	@ObservedObject var budgetListViewModel: BudgetListViewModel
-	@Environment(\.dismiss) private var dismiss
-	@FocusState private var isAmountFocused: Bool
+    @ObservedObject var budgetListViewModel: BudgetListViewModel
+    @Environment(\.dismiss) private var dismiss
 
-	let budgetToEdit: Budget?
+    let selectedMonth: SelectedMonth
+    let categoryToEdit: LogType?
 
-	@State private var type: LogType = .other
-	@State private var monthlyLimit: Double = 0
+    @State private var type: LogType = .other
+    @State private var monthlyLimit: Double = 0
 
-	init(budgetListViewModel: BudgetListViewModel, budgetToEdit: Budget? = nil) {
-		self.budgetListViewModel = budgetListViewModel
-		self.budgetToEdit = budgetToEdit
-		_type = State(initialValue: budgetToEdit?.type ?? .other)
-		_monthlyLimit = State(initialValue: budgetToEdit?.monthlyLimit ?? 0)
-	}
+    init(budgetListViewModel: BudgetListViewModel, selectedMonth: SelectedMonth, categoryToEdit: LogType? = nil) {
+        self.budgetListViewModel = budgetListViewModel
+        self.selectedMonth = selectedMonth
+        self.categoryToEdit = categoryToEdit
 
-	private var availableTypes: [LogType] {
-		let usedTypes = Set(budgetListViewModel.budgets.map { $0.type })
-		return LogType.allCases.filter { !usedTypes.contains($0) }
-	}
+        let existingBudget = categoryToEdit.flatMap {
+            budgetListViewModel.budget(for: $0, month: selectedMonth)
+        }
+        _type = State(initialValue: categoryToEdit ?? .other)
+        _monthlyLimit = State(initialValue: existingBudget?.monthlyLimit ?? 0)
+    }
 
-	var body: some View {
-		NavigationStack {
-			Form {
-				if budgetToEdit == nil {
-					Picker("Category", selection: $type) {
-						ForEach(availableTypes, id: \.self) { type in
-							Text(type.rawValue.capitalized).tag(type)
-						}
-					}
-				} else {
-					HStack {
-						Text("Category")
-						Spacer()
-						Text(type.rawValue.capitalized)
-							.foregroundColor(.secondary)
-					}
-				}
+    private var availableTypes: [LogType] {
+        let trackedTypes = Set(budgetListViewModel.trackedCategories(for: selectedMonth))
+        return LogType.allCases.filter { !trackedTypes.contains($0) }
+    }
 
-				TextField("Monthly limit", value: $monthlyLimit, format: .number)
-					.keyboardType(.decimalPad)
-					.focused($isAmountFocused)
-					.toolbar {
-						ToolbarItemGroup(placement: .keyboard) {
-							Spacer()
-							Button("Done") {
-								isAmountFocused = false
-							}
-						}
-					}
-			}
-			.navigationTitle(budgetToEdit == nil ? "Add Budget" : "Edit Budget")
-			.toolbar {
-				ToolbarItem(placement: .confirmationAction) {
-					Button(budgetToEdit == nil ? "Add" : "Save") {
-						if let budgetToEdit {
-							budgetListViewModel.updateBudget(
-								id: budgetToEdit.id, type: type, monthlyLimit: monthlyLimit)
-						} else {
-							budgetListViewModel.addBudget(type: type, monthlyLimit: monthlyLimit)
-						}
-						dismiss()
-					}
-				}
-				ToolbarItem(placement: .cancellationAction) {
-					Button("Cancel") {
-						dismiss()
-					}
-				}
-			}
-		}
-	}
+    var body: some View {
+        NavigationStack {
+            Form {
+                if categoryToEdit == nil {
+                    Picker("Category", selection: $type) {
+                        ForEach(availableTypes, id: \.self) { type in
+                            Text(type.rawValue.capitalized).tag(type)
+                        }
+                    }
+                } else {
+                    HStack {
+                        Text("Category")
+                        Spacer()
+                        Text(type.rawValue.capitalized)
+                            .foregroundColor(.secondary)
+                    }
+                }
+
+                TextField("Monthly limit", value: $monthlyLimit, format: .number)
+                    .keyboardType(.decimalPad)
+            }
+            .navigationTitle(categoryToEdit == nil ? "Add Budget" : "Edit Budget")
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(categoryToEdit == nil ? "Add" : "Save") {
+                        budgetListViewModel.setBudget(type: type, monthlyLimit: monthlyLimit, month: selectedMonth)
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
 }
 
 #Preview {
-	AddBudgetView(budgetListViewModel: BudgetListViewModel(store: BudgetStoreService()))
+    AddBudgetView(budgetListViewModel: BudgetListViewModel(store: BudgetStoreService()), selectedMonth: .current)
 }

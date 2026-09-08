@@ -19,3 +19,8 @@ extension LogType {
 		}
 	}
 }
+
+struct IdentifiableType: Identifiable {
+    let type: LogType
+    var id: LogType { type }
+}

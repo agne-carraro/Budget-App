@@ -2,82 +2,82 @@ import Combine
 import Foundation
 
 class BudgetListViewModel: ObservableObject {
-	@Published private(set) var budgets: [Budget] = []
+    @Published private(set) var budgets: [Budget] = []
 
-	private let store: BudgetStoring
+    private let store: BudgetStoring
 
-	init(store: BudgetStoring) {
-		self.store = store
-		self.budgets = store.load()
-	}
+    init(store: BudgetStoring) {
+        self.store = store
+        self.budgets = store.load()
+    }
 
-	var hasAvailableCategories: Bool {
-		let usedTypes = Set(budgets.map { $0.type })
-		return LogType.allCases.contains { !usedTypes.contains($0) }
-	}
+    func budget(for type: LogType, month: SelectedMonth) -> Budget? {
+        let exactMatch = budgets.first {
+            $0.type == type && $0.year == month.year && $0.month == month.month
+        }
+        if let exactMatch { return exactMatch }
 
-	func addBudget(type: LogType, monthlyLimit: Double) {
-		if let existingIndex = budgets.firstIndex(where: { $0.type == type }) {
-			budgets[existingIndex].monthlyLimit = monthlyLimit
-		} else {
-			let newBudget = Budget(type: type, monthlyLimit: monthlyLimit)
-			budgets.append(newBudget)
-		}
-		store.save(budgets: budgets)
-	}
+        let earlierBudgets = budgets
+            .filter { $0.type == type }
+            .filter { ($0.year, $0.month) < (month.year, month.month) }
+            .sorted { ($0.year, $0.month) > ($1.year, $1.month) }
 
-	func deleteBudget(at offsets: IndexSet) {
-		for index in offsets.sorted(by: >) {
-			budgets.remove(at: index)
-		}
-		store.save(budgets: budgets)
-	}
+        return earlierBudgets.first
+    }
 
-	func updateBudget(id: UUID, type: LogType, monthlyLimit: Double) {
-		guard let index = budgets.firstIndex(where: { $0.id == id }) else { return }
-		budgets[index].type = type
-		budgets[index].monthlyLimit = monthlyLimit
-		store.save(budgets: budgets)
-	}
+    func setBudget(type: LogType, monthlyLimit: Double, month: SelectedMonth) {
+        if let index = budgets.firstIndex(where: {
+            $0.type == type && $0.year == month.year && $0.month == month.month
+        }) {
+            budgets[index].monthlyLimit = monthlyLimit
+        } else {
+            let newBudget = Budget(type: type, monthlyLimit: monthlyLimit, year: month.year, month: month.month)
+            budgets.append(newBudget)
+        }
+        store.save(budgets: budgets)
+    }
 
-	func spent(for budget: Budget, logs: [Log]) -> Double {
-		let calendar = Calendar.current
-		let now = Date()
+    func deleteBudget(type: LogType, month: SelectedMonth) {
+        budgets.removeAll { $0.type == type && $0.year == month.year && $0.month == month.month }
+        store.save(budgets: budgets)
+    }
 
-		return
-			logs
-			.filter { log in
-				log.type == budget.type
-					&& calendar.isDate(log.date, equalTo: now, toGranularity: .month)
-					&& calendar.isDate(log.date, equalTo: now, toGranularity: .year)
-			}
-			.reduce(0) { total, log in
-				total + (log.isIncome ? -log.amount : log.amount)
-			}
-	}
+    func trackedCategories(for month: SelectedMonth) -> [LogType] {
+        LogType.allCases.filter { budget(for: $0, month: month) != nil }
+    }
 
-	func progress(for budget: Budget, logs: [Log]) -> Double {
-		let limit = effectiveLimit(for: budget, logs: logs)
-		guard limit > 0 else { return 0 }
-		let raw = spent(for: budget, logs: logs) / limit
-		return min(max(raw, 0), 1.0)
-	}
+    func spent(for budget: Budget, logs: [Log], month: SelectedMonth) -> Double {
+        let calendar = Calendar.current
+        return logs
+            .filter { log in
+                log.type == budget.type &&
+                calendar.component(.month, from: log.date) == month.month &&
+                calendar.component(.year, from: log.date) == month.year
+            }
+            .reduce(0) { total, log in
+                total + (log.isIncome ? -log.amount : log.amount)
+            }
+    }
 
-	private func netIncome(for budget: Budget, logs: [Log]) -> Double {
-		let calendar = Calendar.current
-		let now = Date()
+    private func netIncome(for budget: Budget, logs: [Log], month: SelectedMonth) -> Double {
+        let calendar = Calendar.current
+        return logs
+            .filter { log in
+                log.type == budget.type && log.isIncome &&
+                calendar.component(.month, from: log.date) == month.month &&
+                calendar.component(.year, from: log.date) == month.year
+            }
+            .reduce(0) { $0 + $1.amount }
+    }
 
-		return
-			logs
-			.filter { log in
-				log.type == budget.type && log.isIncome
-					&& calendar.isDate(log.date, equalTo: now, toGranularity: .month)
-					&& calendar.isDate(log.date, equalTo: now, toGranularity: .year)
-			}
-			.reduce(0) { $0 + $1.amount }
-	}
+    func effectiveLimit(for budget: Budget, logs: [Log], month: SelectedMonth) -> Double {
+        budget.monthlyLimit + netIncome(for: budget, logs: logs, month: month)
+    }
 
-	func effectiveLimit(for budget: Budget, logs: [Log]) -> Double {
-		budget.monthlyLimit + netIncome(for: budget, logs: logs)
-	}
+    func progress(for budget: Budget, logs: [Log], month: SelectedMonth) -> Double {
+        let limit = effectiveLimit(for: budget, logs: logs, month: month)
+        guard limit > 0 else { return 0 }
+        let raw = spent(for: budget, logs: logs, month: month) / limit
+        return min(max(raw, 0), 1.0)
+    }
 }
